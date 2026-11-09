@@ -1,0 +1,35 @@
+name: Private energy station upkeep
+on:
+  push:
+    branches: [main]
+    paths: ['.github/bootstrap']
+  schedule:
+    - cron: '2-57/5 * * * *'
+    - cron: '17 18 * * 6'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Cloud operation
+        type: choice
+        options: [collect, train]
+        default: collect
+permissions:
+  contents: read
+concurrency:
+  group: energy-${{ (github.event_name == 'push' || github.event.schedule == '17 18 * * 6') && 'train' || inputs.action || 'collect' }}
+  cancel-in-progress: false
+jobs:
+  upkeep:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      SITE_URL: ${{ secrets.SITE_URL }}
+      SITE_ACCESS_TOKEN: ${{ secrets.SITE_ACCESS_TOKEN }}
+      JOB_TOKEN: ${{ secrets.JOB_TOKEN }}
+      RUN_ACTION: ${{ (github.event_name == 'push' || github.event.schedule == '17 18 * * 6') && 'train' || inputs.action || 'collect' }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Invoke private cloud job
+        run: python3 run.py
