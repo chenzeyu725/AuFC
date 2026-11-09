@@ -43,7 +43,8 @@ def invoke(path, payload=None):
     if not origin.startswith("https://"):
         raise ValueError("HTTPS Site origin is required")
     headers = {"OAI-Sites-Authorization": "Bearer " + os.environ["SITE_ACCESS_TOKEN"],
-               "Authorization": "Bearer " + os.environ["JOB_TOKEN"], "Content-Type": "application/json"}
+               "Authorization": "Bearer " + os.environ["JOB_TOKEN"], "Content-Type": "application/json",
+               "X-Runner-Repository": os.environ.get("GITHUB_REPOSITORY", "")}
     request = urllib.request.Request(origin + path, headers=headers,
                                      data=None if payload is None else json.dumps(payload).encode())
     # An expired Site token can redirect to sign-in. Never forward either secret.
